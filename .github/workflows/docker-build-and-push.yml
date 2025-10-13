@@ -89,9 +89,9 @@ jobs:
 
       - name: Docker image vulnerability scan
         if: success()
-        uses: aquasec/trivy-action@master
+        uses: aquasec/trivy-action@v0.21.0
         with:
-          image-ref: ${{ secrets.DOCKER_USERNAME }}/devops:latest
+          image-ref: ${{ secrets.DOCKER_USERNAME }}/kubernetes-demo-api:latest
           format: 'sarif'
           output: 'trivy-results.sarif'
 
