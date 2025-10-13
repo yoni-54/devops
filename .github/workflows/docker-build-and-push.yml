@@ -26,7 +26,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKER_USERNAME }}/kubernetes-demo-api:latest
+          images: ${{ secrets.DOCKER_USERNAME }}/kubernetes-demo-api
           tags: |
             type=ref,event=branch
             type=sha,prefix={{branch}}-
@@ -91,7 +91,7 @@ jobs:
         if: success()
         uses: aquasecurity/trivy-action@0.20.0
         with:
-          image-ref: ${{ secrets.DOCKER_USERNAME }}/kubernetes-demo-api:latest
+          image-ref: ${{ secrets.DOCKER_USERNAME }}/kubernetes-demo-api
           format: 'sarif'
           output: 'trivy-results.sarif'
 
