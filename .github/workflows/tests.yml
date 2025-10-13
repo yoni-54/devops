@@ -1,0 +1,92 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main, staging]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    env:
+      NODE_ENV: test
+      NODE_OPTIONS: --experimental-vm-modules
+      DATABASE_URL: ${{ secrets.TEST_DATABASE_URL || 'sqlite://./test.db' }}
+      ARCJET_ENV: development
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        id: test_run
+        run: |
+          echo "Running Jest tests with coverage..."
+          npm test 2>&1 | tee test_output.log
+          
+          # Check if tests passed
+          if [ ${PIPESTATUS[0]} -ne 0 ]; then
+            echo "test_failed=true" >> $GITHUB_OUTPUT
+            echo "::error::Tests failed. Check the logs for details."
+          else
+            echo "test_failed=false" >> $GITHUB_OUTPUT
+            echo "✅ All tests passed!"
+          fi
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: coverage/
+          retention-days: 30
+
+      - name: Generate test summary
+        if: always()
+        run: |
+          echo "## 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f "coverage/lcov-report/index.html" ]; then
+            # Extract coverage percentage if available
+            if grep -q "headerCovTableEntryLo\|headerCovTableEntryMed\|headerCovTableEntryHi" coverage/lcov-report/index.html; then
+              COVERAGE=$(grep -o '[0-9]*\.[0-9]*%' coverage/lcov-report/index.html | head -1 || echo "N/A")
+              echo "- **Coverage**: $COVERAGE" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+          
+          if [ -f "test_output.log" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Test Output:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            tail -20 test_output.log >> $GITHUB_STEP_SUMMARY || echo "Could not read test output" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ steps.test_run.outputs.test_failed }}" = "true" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **Tests Failed**: Some tests did not pass. Please check the logs above for details." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📋 Next Steps:" >> $GITHUB_STEP_SUMMARY
+            echo "1. Review the failing tests in the output above" >> $GITHUB_STEP_SUMMARY
+            echo "2. Run tests locally with \`npm test\`" >> $GITHUB_STEP_SUMMARY
+            echo "3. Fix the issues and push your changes" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **All tests passed successfully!**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Annotate test failures
+        if: failure()
+        run: |
+          echo "::notice::Test suite failed. Please check the test results above and fix any failing tests before merging."
