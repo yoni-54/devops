@@ -1,6 +1,14 @@
 import express from 'express';
-import { fetchAllUsers, fetchUserById, editUser, removeUser } from '#controllers/users.controller.js';
-import { authenticateToken, requireAdmin } from '#middleware/auth.middleware.js';
+import {
+  fetchAllUsers,
+  fetchUserById,
+  editUser,
+  removeUser,
+} from '#controllers/users.controller.js';
+import {
+  authenticateToken,
+  requireAdmin,
+} from '#middleware/auth.middleware.js';
 
 const router = express.Router();
 
@@ -17,4 +25,3 @@ router.put('/:id', authenticateToken, editUser);
 router.delete('/:id', authenticateToken, removeUser);
 
 export default router;
-

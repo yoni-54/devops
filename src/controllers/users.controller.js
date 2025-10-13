@@ -1,6 +1,14 @@
 import logger from '#config/logger.js';
-import { getAllUsers, getUserById, updateUser, deleteUser } from '#services/users.service.js';
-import { userIdSchema, updateUserSchema } from '#validations/users.validation.js';
+import {
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+} from '#services/users.service.js';
+import {
+  userIdSchema,
+  updateUserSchema,
+} from '#validations/users.validation.js';
 import { formatValidationError } from '#utils/format.js';
 
 export const fetchAllUsers = async (req, res, next) => {
@@ -27,12 +35,12 @@ export const fetchUserById = async (req, res, next) => {
     if (!validationResult.success) {
       return res.status(400).json({
         error: 'Validation failed',
-        details: formatValidationError(validationResult.error)
+        details: formatValidationError(validationResult.error),
       });
     }
 
     const { id } = validationResult.data;
-    
+
     logger.info(`Getting user by ID: ${id}`);
 
     const user = await getUserById(id);
@@ -40,13 +48,13 @@ export const fetchUserById = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({
         error: 'User not found',
-        message: `User with ID ${id} does not exist`
+        message: `User with ID ${id} does not exist`,
       });
     }
 
     res.json({
       message: 'Successfully retrieved user',
-      user
+      user,
     });
   } catch (e) {
     logger.error('Error fetching user by ID', e);
@@ -61,7 +69,7 @@ export const editUser = async (req, res, next) => {
     if (!idValidation.success) {
       return res.status(400).json({
         error: 'Validation failed',
-        details: formatValidationError(idValidation.error)
+        details: formatValidationError(idValidation.error),
       });
     }
 
@@ -70,7 +78,7 @@ export const editUser = async (req, res, next) => {
     if (!bodyValidation.success) {
       return res.status(400).json({
         error: 'Validation failed',
-        details: formatValidationError(bodyValidation.error)
+        details: formatValidationError(bodyValidation.error),
       });
     }
 
@@ -85,7 +93,7 @@ export const editUser = async (req, res, next) => {
     if (requesterId !== id && requesterRole !== 'admin') {
       return res.status(403).json({
         error: 'Forbidden',
-        message: 'You can only update your own information'
+        message: 'You can only update your own information',
       });
     }
 
@@ -93,25 +101,28 @@ export const editUser = async (req, res, next) => {
     if (updates.role && requesterRole !== 'admin') {
       return res.status(403).json({
         error: 'Forbidden',
-        message: 'Only administrators can change user roles'
+        message: 'Only administrators can change user roles',
       });
     }
 
-    logger.info(`Updating user ID: ${id}`, { requesterId, updates: Object.keys(updates) });
+    logger.info(`Updating user ID: ${id}`, {
+      requesterId,
+      updates: Object.keys(updates),
+    });
 
     const updatedUser = await updateUser(id, updates);
 
     res.json({
       message: 'User updated successfully',
-      user: updatedUser
+      user: updatedUser,
     });
   } catch (e) {
     logger.error('Error updating user', e);
-    
+
     if (e.message === 'User not found') {
       return res.status(404).json({
         error: 'User not found',
-        message: `User with ID ${req.params.id} does not exist`
+        message: `User with ID ${req.params.id} does not exist`,
       });
     }
 
@@ -126,7 +137,7 @@ export const removeUser = async (req, res, next) => {
     if (!validationResult.success) {
       return res.status(400).json({
         error: 'Validation failed',
-        details: formatValidationError(validationResult.error)
+        details: formatValidationError(validationResult.error),
       });
     }
 
@@ -138,7 +149,7 @@ export const removeUser = async (req, res, next) => {
     if (requesterId !== id && requesterRole !== 'admin') {
       return res.status(403).json({
         error: 'Forbidden',
-        message: 'You can only delete your own account'
+        message: 'You can only delete your own account',
       });
     }
 
@@ -148,15 +159,15 @@ export const removeUser = async (req, res, next) => {
 
     res.json({
       message: 'User deleted successfully',
-      user: deletedUser
+      user: deletedUser,
     });
   } catch (e) {
     logger.error('Error deleting user', e);
-    
+
     if (e.message === 'User not found') {
       return res.status(404).json({
         error: 'User not found',
-        message: `User with ID ${req.params.id} does not exist`
+        message: `User with ID ${req.params.id} does not exist`,
       });
     }
 

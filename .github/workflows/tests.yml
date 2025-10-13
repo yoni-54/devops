@@ -9,13 +9,13 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     env:
       NODE_ENV: test
       NODE_OPTIONS: --experimental-vm-modules
       DATABASE_URL: ${{ secrets.TEST_DATABASE_URL || 'sqlite://./test.db' }}
       ARCJET_ENV: development
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -34,7 +34,7 @@ jobs:
         run: |
           echo "Running Jest tests with coverage..."
           npm test 2>&1 | tee test_output.log
-          
+
           # Check if tests passed
           if [ ${PIPESTATUS[0]} -ne 0 ]; then
             echo "test_failed=true" >> $GITHUB_OUTPUT
@@ -56,7 +56,7 @@ jobs:
         if: always()
         run: |
           echo "## 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ -f "coverage/lcov-report/index.html" ]; then
             # Extract coverage percentage if available
             if grep -q "headerCovTableEntryLo\|headerCovTableEntryMed\|headerCovTableEntryHi" coverage/lcov-report/index.html; then
@@ -64,7 +64,7 @@ jobs:
               echo "- **Coverage**: $COVERAGE" >> $GITHUB_STEP_SUMMARY
             fi
           fi
-          
+
           if [ -f "test_output.log" ]; then
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### Test Output:" >> $GITHUB_STEP_SUMMARY
@@ -72,7 +72,7 @@ jobs:
             tail -20 test_output.log >> $GITHUB_STEP_SUMMARY || echo "Could not read test output" >> $GITHUB_STEP_SUMMARY
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           if [ "${{ steps.test_run.outputs.test_failed }}" = "true" ]; then
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "❌ **Tests Failed**: Some tests did not pass. Please check the logs above for details." >> $GITHUB_STEP_SUMMARY
